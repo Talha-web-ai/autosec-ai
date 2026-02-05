@@ -1,133 +1,110 @@
-🔐 AutoSec AI
+# 🔐 AutoSec AI
 
-AutoSec AI is a lightweight, analyst-first security assessment engine designed to perform
-baseline external security checkups for early-stage startups, indie founders, and small teams.
+**AutoSec AI** is a lightweight, analyst-first security assessment engine for performing  
+**baseline external security checkups** on early-stage products and internet-facing systems.
 
-It helps answer one practical question:
+It is designed to help founders and small teams answer one practical question:
 
-“Are we publicly exposed in obvious ways, and what should we fix first?”
+> **“Are we publicly exposed in obvious ways, and what should we fix first?”**
 
-AutoSec AI is not a penetration testing tool.
-It is the engine behind a fast, honest, baseline security review service.
+AutoSec AI is **not** a penetration testing tool.  
+It is the internal engine behind a **fast, honest baseline security review workflow**.
 
-🚀 What AutoSec AI Does
+---
 
-AutoSec AI performs a safe, non-intrusive external security assessment of a target’s
-public-facing surface and produces structured findings for human review.
+## 🚀 What AutoSec AI Does
 
-It currently assesses:
+AutoSec AI performs a **safe, non-intrusive external security assessment** of a target’s
+public attack surface and produces structured findings for human review.
 
-🔍 Network exposure & services (Nmap)
+It currently checks:
 
-🌐 Web server misconfigurations (Nikto)
+- 🔍 **Network exposure & open services** (Nmap)
+- 🌐 **Common web server misconfigurations** (Nikto)
+- 🛡️ **HTTP security headers**
+- 📧 **DNS email security hygiene** (SPF, DKIM, DMARC)
+- 🔐 **TLS / HTTPS availability**
+- 🧾 **Domain & WHOIS hygiene**
+- 🧠 **AI-assisted risk explanation** (local, optional)
+- 📄 **Structured security reports** (Markdown & JSON)
 
-🛡️ HTTP security headers
+---
 
-📧 DNS email security hygiene (SPF, DKIM, DMARC)
+## 🧭 Scope & Philosophy
 
-🔐 TLS / HTTPS availability & configuration
+AutoSec AI is intentionally scoped to remain safe, clear, and defensible.
 
-🧾 WHOIS & domain hygiene
+### ✅ Designed to:
+- Identify publicly exposed services
+- Detect common security misconfigurations
+- Highlight security hygiene gaps
+- Provide calm, actionable recommendations
+- Support analyst-reviewed security reports
 
-🧠 AI-assisted risk explanation (local, optional)
+### ❌ Explicitly does NOT:
+- Exploit vulnerabilities
+- Bypass authentication or authorization
+- Perform deep application logic testing
+- Replace full penetration testing
+- Perform intrusive or unsafe scans
 
-📄 Structured security reports (Markdown + JSON)
+This makes AutoSec AI suitable for:
+- Early-stage SaaS and startups
+- MVP and pre-launch security checks
+- Ongoing external exposure monitoring
+- Founder-friendly security reviews
 
-🧭 Scope & Philosophy
+---
 
-AutoSec AI is intentionally scoped.
+## 🔐 Safe by Design
 
-✅ Designed to:
+- Public-surface checks only
+- No exploitation or fuzzing
+- No credentialed testing
+- No authentication bypass
+- Designed for defensive, permission-based use
 
-Identify publicly exposed services
+---
 
-Detect common misconfigurations
+## 🧠 AI Usage
 
-Highlight security hygiene gaps
+AutoSec AI optionally uses **local AI models (via Ollama)** to assist with:
 
-Provide calm, actionable guidance
+- Explaining technical findings in plain language
+- Summarizing overall risk responsibly
+- Providing non-alarmist remediation guidance
 
-Support analyst-reviewed security reports
+AI is **never** used to:
+- Discover vulnerabilities
+- Assign CVSS scores
+- Make authoritative security claims
 
-❌ Explicitly does NOT:
+All AI output is advisory and intended for human review.
 
-Exploit vulnerabilities
+---
 
-Bypass authentication or authorization
-
-Perform deep application logic testing
-
-Replace penetration testing
-
-Perform intrusive or unsafe scans
-
-This makes AutoSec AI ideal for:
-
-Early-stage SaaS & startups
-
-MVP and pre-launch checks
-
-Ongoing exposure monitoring
-
-Founder-friendly security reviews
-
-🔐 Safe by Design
-
-No exploitation
-
-No credentialed testing
-
-No crawling or fuzzing
-
-Public-surface checks only
-
-Designed for defensive, permission-based use
-
-🧠 AI Usage (Important)
-
-AutoSec AI uses local AI models (via Ollama) to assist with:
-
-Explaining risk in plain language
-
-Summarizing findings responsibly
-
-Providing non-alarmist recommendations
-
-AI is never used to:
-
-Detect vulnerabilities
-
-Assign CVSS scores
-
-Make authoritative security claims
-
-AI output is advisory, not authoritative.
-
-📄 Output & Workflow
+## 📄 Output & Workflow
 
 AutoSec AI supports two primary outputs:
 
-📘 Human-Readable Reports
+### 📘 Human-Readable Reports
+- Clean Markdown reports
+- Clear scope and limitations
+- Findings grouped by scanner
+- Designed for analyst review and refinement
 
-Clean Markdown reports
+### 📦 Machine-Readable Output
+- JSON output mode for automation
+- Suitable for CI pipelines and internal tooling
+- Enables structured analyst workflows
 
-Clear scope explanation
+> Reports are intended to be **reviewed and edited by a security analyst** before being shared externally.
 
-Structured findings by scanner
+---
 
-Designed for internal review and refinement
+## ⚙️ Installation
 
-📦 Machine-Readable Output
-
-JSON output mode for automation
-
-Suitable for CI, scripts, or internal tooling
-
-Enables analyst workflows and integrations
-
-Reports are intended to be reviewed and refined by a security analyst before being shared externally.
-
-⚙️ Installation (Local)
+```bash
 git clone https://github.com/<your-username>/autosec-ai.git
 cd autosec-ai
 python -m venv .venv
@@ -136,32 +113,34 @@ pip install -e .
 
 ▶️ Usage
 
-Run a baseline external scan:
+Run a baseline external security scan:
 
 autosec scan example.com
 
-
-Reports are saved under:
+Reports are generated under:
 
 reports/scans/<target>/
 
-🧩 Who This Is For
+
+🧩 Intended Users
 
 AutoSec AI is built for:
 
 Security consultants
 
-Startup founders who want clarity, not fear
+Early-stage founders seeking clarity, not fear
 
 Small teams without dedicated security staff
 
-Anyone offering or performing baseline security reviews
+Anyone performing baseline external security reviews
 
 It is not intended as a self-serve vulnerability scanner for end customers.
 
+
+
 🧠 Why AutoSec AI Exists
 
-Most early-stage teams ship fast — and security visibility comes late.
+Most early-stage teams move fast and lack visibility into their external security exposure.
 
 AutoSec AI exists to provide:
 
@@ -173,12 +152,14 @@ Practical next steps
 
 Without enterprise tooling, noise, or fear-driven reporting.
 
+
 💼 Security Checkup Service
 
-AutoSec AI powers a paid baseline security checkup service.
+AutoSec AI powers a paid baseline external security checkup service.
 
-If you’re an early-stage founder and want a quick, honest assessment of your
+If you are an early-stage founder and want a quick, honest assessment of your
 public-facing infrastructure — reviewed by a human — this tool is the engine behind that work.
+
 
 ⚠️ Disclaimer
 
