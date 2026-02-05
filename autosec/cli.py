@@ -1,24 +1,35 @@
 import argparse
+import json
 from rich.console import Console
 from rich.panel import Panel
 
-from scanner.nmap_scan import run_nmap
-from scanner.nikto_scan import run_nikto
+from scanner.orchestrator import ScanOrchestrator
 from ai.analyzer import analyze
 from reports.report_generator import generate_report
 
 console = Console()
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog="autosec",
-        description="AutoSec AI – AI-assisted security scanning tool"
+        description="AutoSec AI – AI-assisted baseline security scanner"
     )
 
     subparsers = parser.add_subparsers(dest="command")
 
     scan_parser = subparsers.add_parser("scan", help="Run security scan")
     scan_parser.add_argument("target", help="Domain or IP to scan")
+    scan_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output results as JSON (no report file)"
+    )
+    scan_parser.add_argument(
+        "--no-ai",
+        action="store_true",
+        help="Skip AI analysis step"
+    )
 
     args = parser.parse_args()
 
@@ -26,36 +37,53 @@ def main():
         parser.print_help()
         return
 
-    console.print(Panel.fit(
-        f"[bold cyan]AutoSec AI[/bold cyan]\nTarget: [bold]{args.target}[/bold]",
-        title="Security Scan",
-        border_style="cyan"
-    ))
+    if not args.json:
+        console.print(Panel.fit(
+            f"[bold cyan]AutoSec AI[/bold cyan]\nTarget: [bold]{args.target}[/bold]",
+            title="Security Scan",
+            border_style="cyan"
+        ))
 
-    console.print("[yellow][+] Running Nmap scan...[/yellow]")
-    scan_results = run_nmap(args.target)
+    # --------------------
+    # RUN SCANNERS
+    # --------------------
+    orchestrator = ScanOrchestrator(args.target)
+    scan_findings = orchestrator.run()
 
-    web_ports = [
-        r for r in scan_results
-        if r["state"] == "open" and r["port"] in [80, 443]
-    ]
+    # --------------------
+    # AI ANALYSIS (OPTIONAL)
+    # --------------------
+    analysis = None
+    if not args.no_ai:
+        try:
+            analysis = analyze(scan_findings)
+        except Exception as e:
+            analysis = {
+                "risk_level": "Unknown",
+                "summary": "AI analysis could not be completed.",
+                "recommendation": "Review technical findings manually."
+            }
 
-    nikto_results = None
-    if web_ports:
-        console.print("[yellow][+] Web service detected — running Nikto scan...[/yellow]")
-        nikto_results = run_nikto(args.target)
-    else:
-        console.print("[cyan][-] No web ports detected, skipping Nikto[/cyan]")
+    # --------------------
+    # JSON OUTPUT MODE
+    # --------------------
+    if args.json:
+        output = {
+            "target": args.target,
+            "findings": scan_findings,
+            "analysis": analysis,
+        }
+        print(json.dumps(output, indent=2))
+        return
 
-    console.print("[yellow][+] Analyzing results with AI...[/yellow]")
-    analysis = analyze(scan_results, nikto_results)
-
+    # --------------------
+    # REPORT GENERATION
+    # --------------------
     console.print("[yellow][+] Generating report...[/yellow]")
     report_path = generate_report(
         args.target,
         analysis,
-        scan_results,
-        nikto_results
+        scan_findings
     )
 
     console.print(f"[bold green][✔] Scan completed successfully![/bold green]")

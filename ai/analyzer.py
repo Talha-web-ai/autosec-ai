@@ -2,34 +2,40 @@ import subprocess
 import json
 import re
 
-def analyze(scan_results, nikto_results=None):
-    findings = []
 
-    for r in scan_results:
-        if r["state"] == "open":
-            entry = (
-                f"Port {r['port']} running {r['service']} "
-                f"({r['version']}), Severity: {r['severity']}."
-            )
+def analyze(findings):
+    """
+    Perform AI-based risk analysis on unified scanner findings.
+    This is a BASELINE external security assessment.
+    """
 
-            if r.get("cves"):
-                entry += f" Known CVEs: {[c['id'] for c in r['cves']]}"
+    # --------------------
+    # BUILD FINDINGS TEXT
+    # --------------------
+    if not findings:
+        findings_text = "No significant findings were detected."
+    else:
+        findings_text = "\n".join(
+            f"- {f.get('title')} (Severity: {f.get('severity')})"
+            for f in findings
+        )
 
-            findings.append(entry)
-
-    findings_text = "\n".join(findings)
-
+    # --------------------
+    # AI PROMPT
+    # --------------------
     prompt = f"""
-You are a cybersecurity consultant performing a BASELINE SECURITY CHECKUP.
+You are a cybersecurity consultant performing a BASELINE EXTERNAL SECURITY CHECKUP.
 
 IMPORTANT CONTEXT:
-- This scan focuses on infrastructure exposure, services, and common misconfigurations.
-- It does NOT include deep application logic testing or authenticated testing.
+- This assessment only covers publicly exposed services and configurations.
+- No exploitation, authentication testing, or business logic testing was performed.
+- Absence of findings does NOT imply the system is fully secure.
 
 INSTRUCTIONS:
-- Be honest but professional.
+- Be factual, calm, and professional.
 - Do not exaggerate risk.
-- If findings are limited, clearly explain WHAT was assessed and WHAT was not.
+- Clearly explain WHAT was assessed and WHAT was not.
+- Avoid technical jargon where possible.
 
 Respond ONLY in valid JSON.
 No markdown. No text outside JSON.
@@ -37,37 +43,70 @@ No markdown. No text outside JSON.
 Return exactly:
 {{
   "risk_level": "Low | Medium | High",
-  "summary": "Explain overall security posture and scan scope in simple language",
-  "recommendation": "Concrete next steps and when deeper testing is needed"
+  "summary": "High-level explanation of the security posture and scan scope",
+  "recommendation": "Clear, practical next steps and when deeper testing is needed"
 }}
 
 Technical Findings:
 {findings_text}
 """
 
+    # --------------------
+    # RUN LOCAL LLM
+    # --------------------
+    try:
+        result = subprocess.run(
+            ["ollama", "run", "llama3"],
+            input=prompt,
+            text=True,
+            capture_output=True,
+            timeout=60
+        )
+    except Exception:
+        return _safe_fallback(findings_text)
 
-    if nikto_results:
-        prompt += f"\nNikto Web Scan Results:\n{nikto_results}"
+    raw_output = result.stdout.strip()
 
-    result = subprocess.run(
-        ["ollama", "run", "llama3"],
-        input=prompt,
-        text=True,
-        capture_output=True
-    )
-
-    raw = result.stdout.strip()
-    match = re.search(r"\{.*\}", raw, re.DOTALL)
-
+    # --------------------
+    # EXTRACT JSON SAFELY
+    # --------------------
+    match = re.search(r"\{.*\}", raw_output, re.DOTALL)
     if match:
         try:
-            return json.loads(match.group())
+            parsed = json.loads(match.group())
+            if _valid_analysis(parsed):
+                return parsed
         except json.JSONDecodeError:
             pass
 
-    # Safe fallback
+    return _safe_fallback(findings_text)
+
+
+# --------------------
+# HELPERS
+# --------------------
+
+def _valid_analysis(data):
+    return (
+        isinstance(data, dict)
+        and "risk_level" in data
+        and "summary" in data
+        and "recommendation" in data
+    )
+
+
+def _safe_fallback(findings_text):
+    """
+    Conservative fallback if AI output is invalid or unavailable.
+    """
     return {
-        "risk_level": "Medium",
-        "summary": raw[:500],
-        "recommendation": "Review exposed services, patch vulnerable software, and restrict access."
+        "risk_level": "Medium" if findings_text != "No significant findings were detected." else "Low",
+        "summary": (
+            "This assessment identified publicly exposed services and configuration "
+            "details based on a baseline external security scan."
+        ),
+        "recommendation": (
+            "Review the technical findings, apply recommended hardening steps, "
+            "and consider deeper security testing if the system is business-critical."
+        ),
     }

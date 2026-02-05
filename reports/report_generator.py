@@ -1,7 +1,13 @@
 import os
 from datetime import datetime
 
-def generate_report(target, analysis, scan_results, nikto_results=None):
+
+def generate_report(target, analysis, findings):
+    """
+    Internal draft report generator.
+    Output is meant for analyst review, not direct client delivery.
+    """
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     safe_target = target.replace("/", "_")
 
@@ -11,7 +17,7 @@ def generate_report(target, analysis, scan_results, nikto_results=None):
     filename = f"scan_{timestamp.replace(':', '-')}.md"
     filepath = os.path.join(target_dir, filename)
 
-    report = f"""# 🔐 AutoSec AI – Security Report
+    report = f"""# 🔐 AutoSec AI – Security Report (Internal Draft)
 
 ## Target
 {target}
@@ -20,54 +26,46 @@ def generate_report(target, analysis, scan_results, nikto_results=None):
 {timestamp}
 
 ## Overall Risk
-🟡 {analysis.get("risk_level", "Unknown")}
+🟡 {analysis.get("risk_level", "Unknown") if analysis else "Unknown"}
 
 ---
 
 ## 🧭 Security Context
 
-This assessment represents a **baseline security checkup** focused on publicly exposed
-services, network configuration, and common web misconfigurations.
+This assessment represents a **baseline external security checkup** focused on
+publicly exposed services and configurations.
 
-No critical infrastructure-level vulnerabilities were identified during this scan.
-However, this assessment does **not** include deep application-layer testing,
-authentication testing, or business logic analysis.
+This scan does **not** include:
+- Authentication testing
+- Authorization bypass
+- Business logic analysis
+- Exploitation of vulnerabilities
 
 ---
 
 ## 🔍 Technical Findings
 """
 
-    # Technical findings
-    for r in scan_results:
-        if r.get("state") == "open":
+    if not findings:
+        report += "\n- No significant findings detected.\n"
+    else:
+        for f in findings:
             report += (
-                f"- **Port {r['port']}** ({r['service']} {r['version']})\n"
-                f"  Severity: **{r.get('severity', 'Unknown')}**\n"
+                f"\n### {f.get('title', 'Finding')}\n"
+                f"- Severity: **{f.get('severity', 'info')}**\n"
+                f"- Description: {f.get('description', '')}\n"
             )
 
-            # CVE details (limited to avoid noise)
-            for cve in r.get("cves", [])[:2]:
-                report += (
-                    f"  - CVE: {cve.get('id')} – "
-                    f"{cve.get('description', '')[:120]}...\n"
-                )
+            evidence = f.get("evidence")
+            if evidence:
+                report += f"- Evidence: `{evidence}`\n"
 
-            report += "\n"
+            recommendation = f.get("recommendation")
+            if recommendation:
+                report += f"- Recommendation: {recommendation}\n"
 
-    # Nikto section (if applicable)
-    if nikto_results:
-        report += """---
-## 🌐 Web Vulnerability Scan (Nikto)
-"""
-        vulns = nikto_results.get("vulnerabilities", [])
-        if vulns:
-            for v in vulns[:5]:
-                report += f"- {v.get('msg', 'Potential web vulnerability detected')}\n"
-        else:
-            report += "- No major web vulnerabilities detected during web scan.\n"
-
-    report += f"""
+    if analysis:
+        report += f"""
 ---
 
 ## 🧠 AI Risk Summary
@@ -75,8 +73,11 @@ authentication testing, or business logic analysis.
 
 ---
 
-## 🛠️ Recommended Actions
-{analysis.get("recommendation", "No recommendations provided.")}
+## 🛠️ Analyst Notes / Next Actions
+{analysis.get("recommendation", "Review findings manually.")}
+"""
+
+    report += """
 
 ---
 

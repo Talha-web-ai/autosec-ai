@@ -7,3 +7,7 @@ reports/scans/
 EOF
 
 
+
+# Generated scan reports
+reports/scans/
+scanner/reports/
